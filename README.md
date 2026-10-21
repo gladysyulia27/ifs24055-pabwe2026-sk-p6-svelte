@@ -1,153 +1,62 @@
-# ifs24055-pabwe2026-sk-p6-sveltekit
+# Delcom Link Tree (Svelte 5 + Vite, JavaScript)
 
-Proyek Studi Kasus 2: Pengembangan Aplikasi Web **Delcom Courses** berbasis **SvelteKit** (TypeScript), **Tailwind CSS v4**, dan **Bun** (`@sveltejs/adapter-bun`). Terhubung langsung dengan Delcom Open API (`https://open-api.delcom.org/docs/1.0/api-courses`).
+Studi Kasus 1 — Praktikum 6 PABWE 2026 · NIM **ifs24010**
 
----
+## Prasyarat
+- [Bun](https://bun.sh) (package manager proyek ini; ada `bun.lock`) atau Node.js 20+.
+- Backend Delcom Open API (lokal di `http://localhost:8000/api/v1` atau `https://open-api.delcom.org/api/v1`).
 
-## 🚀 Fitur Utama
-
-1. **Autentikasi & Sesi**:
-   - Pendaftaran akun baru (`/auth/register`).
-   - Masuk akun (`/auth/login`) dengan penyimpanan token aman di `localStorage`.
-   - Proteksi rute berbasis sesi dengan redirect otomatis (`AuthSessionRedirect`).
-   - Keluar akun (*logout*).
-
-2. **Manajemen Kursus (CRUD)**:
-   - Menampilkan daftar semua kursus dengan filter pencarian dan opsi "Semua / Kursus Saya" (`/`).
-   - Tambah kursus baru dengan judul dan deskripsi Markdown (`AddModal`).
-   - Ubah informasi kursus (`ChangeModal`).
-   - Ubah/unggah foto cover kursus (`ChangeCoverModal`).
-   - Hapus kursus dan hapus semua kursus milik pengguna (dengan dialog konfirmasi SweetAlert2).
-
-3. **Materi Pembelajaran (Course Contents)**:
-   - Tambah dan edit materi video YouTube (`ContentModal`).
-   - Tampilan video interaktif (*responsive YouTube iframe embed*) (`/courses/[courseId]/contents/[contentId]`).
-   - Penandaan status materi (Selesai / Belum Selesai).
-   - Hapus materi konten kursus.
-
-4. **Keanggotaan Mahasiswa & Progres**:
-   - Mengikuti kursus (*join/enroll*) sebagai mahasiswa.
-   - Keluar dari kursus (*leave/unenroll*).
-   - Indikator persentase progres belajar materi kursus.
-
-5. **Rating & Ulasan**:
-   - Pemberian nilai rating (1–5 bintang) beserta komentar ulasan.
-   - Perhitungan rata-rata rating kursus (*average rating*).
-
-6. **Pengguna & Profil**:
-   - Melihat daftar seluruh pengguna terdaftar (`/users`).
-   - Melihat dan memperbarui profil pengguna (`/profile`).
-   - Unggah/ganti foto profil.
-   - Ganti kata sandi (*password*).
-
----
-
-## 🛠️ Tech Stack & Konfigurasi
-
-- **Framework**: [SvelteKit](https://kit.svelte.dev/) (Svelte 5)
-- **Language**: TypeScript
-- **Runtime & Package Manager**: [Bun](https://bun.sh/)
-- **Adapter**: `@sveltejs/adapter-bun` (menggunakan prefix env `APP_`, default port: `3005`)
-- **Styling**: Tailwind CSS v4 (`@tailwindcss/vite`)
-- **Markdown**: Toast UI Editor (`@toast-ui/editor`)
-- **Icons**: Lucide Svelte (`lucide-svelte`)
-- **Testing**: Vitest, `@testing-library/svelte`, `@testing-library/jest-dom`, JSDOM, V8 Coverage
-
----
-
-## ⚙️ Variabel Lingkungan (`.env`)
-
-Konfigurasikan file `.env` berdasarkan `.env.example`:
-
-```env
-APP_PORT=3005
-VITE_DELCOM_BASEURL=https://open-api.delcom.org/api/v1
-```
-
----
-
-## 📦 Instalasi & Penggunaan
-
-### 1. Instalasi Dependensi
-
+## Instalasi & konfigurasi environment
 ```bash
 bun install
+cp .env.example .env     # lalu sesuaikan nilainya
 ```
+| Variabel | Fungsi | Contoh |
+|---|---|---|
+| `VITE_DELCOM_BASEURL` | URL dasar API (tanpa akhiran `/`) | `https://open-api.delcom.org/api/v1` |
+| `APP_PORT` | Port dev server | `3004` |
 
-### 2. Mode Pengembangan (Development)
+Tanpa `.env`, aplikasi memakai `http://localhost:8000/api/v1`.
 
+## Menjalankan
 ```bash
-bun run dev
+bun run dev              # http://localhost:3004
+bun run test             # unit + integration test
+bun run test:coverage    # threshold coverage 100%
+bun run build && bun run preview
 ```
+Jangan gunakan `bun test`; gunakan `bun run test` atau `bun x vitest run`.
 
-Aplikasi dapat diakses melalui browser di `http://localhost:3005`.
+## Struktur
+- `src/features/auth` — login, register, logout (`authStore.js`)
+- `src/features/users` — daftar pengguna, profil, foto, kata sandi
+- `src/features/linktrees` — API, `linkTreesStore.js`, layout, navbar, sidebar, modal, halaman
+- `src/features/common` — 404 + komponen bersama (NavLink, Avatar, Modal)
+- `src/router.js` — router kustom (History API)
+- `src/index.css` — token desain (warna, font) dan kelas komponen (`btn-*`, `field`, `card`)
 
-### 3. Pengujian Unit & Cakupan Kode (Testing & Coverage)
+## Desain UI ("Spruce & Marigold")
+- Bingkai gelap (header + rel navigasi kiri) membungkus kanvas konten terang; di seluler navigasi menjadi tab bar bawah.
+- Font: Bricolage Grotesque (judul) dan Atkinson Hyperlegible (isi), disajikan dari `public/fonts`
+  dan font utama di-preload dari origin yang sama untuk menghindari rantai request Google Fonts.
+- Kelas `bg-indigo-600` pada menu aktif Sidebar dipertahankan karena dipakai `Sidebar.test.js`;
+  token `--color-indigo-600` dialihkan ke warna brand di `src/index.css`.
 
-```bash
-# Menjalankan seluruh pengujian unit
-bun run test
+## Deploy ke Vercel
+- `vercel.json` mengarahkan semua path ke `index.html` (SPA), jadi `/auth/login`
+  dan `/link-trees/4` bisa dibuka langsung / di-refresh.
+- Karena `.env` ada di `.gitignore`, tambahkan environment variable di dashboard Vercel
+  (Settings → Environment Variables): `VITE_DELCOM_BASEURL=https://open-api.delcom.org/api/v1`,
+  lalu redeploy. Tanpa ini aplikasi memakai `http://localhost:8000/api/v1`.
+- Build command: `bun run build`, output directory: `dist`.
 
-# Menjalankan pengujian dengan laporan cakupan kode (V8)
-bun run test:coverage
-```
-
-- **Total Test Suites**: 28 file pengujian
-- **Total Tests**: 301 pengujian unit (100% lulus)
-- **Lines Coverage**: 100.00%
-- **Functions Coverage**: 100.00%
-
-### 4. Build & Jalankan untuk Produksi (Production)
-
-```bash
-# Kompilasi aplikasi untuk produksi
-bun run build
-
-# Menjalankan server produksi Bun
-bun start
-```
-
----
-
-## 📂 Struktur Direktori Proyek
-
-```
-src/
-├── app.d.ts
-├── app.html
-├── setupTests.ts
-├── test-utils.ts
-├── hooks/
-│   └── useInput.ts
-├── helpers/
-│   ├── apiHelper.ts
-│   └── toolsHelper.ts
-├── features/
-│   ├── auth/
-│   │   ├── api/
-│   │   ├── layouts/
-│   │   ├── pages/
-│   │   └── states/
-│   ├── common/
-│   │   └── pages/
-│   ├── courses/
-│   │   ├── api/
-│   │   ├── components/
-│   │   ├── layouts/
-│   │   ├── modals/
-│   │   ├── pages/
-│   │   └── states/
-│   └── users/
-│       ├── api/
-│       ├── pages/
-│       └── states/
-└── routes/
-    ├── +error.svelte
-    ├── +layout.svelte
-    ├── +layout.ts
-    ├── +page.svelte
-    ├── auth/
-    ├── courses/
-    ├── profile/
-    └── users/
-```
+## Deploy ke Netlify
+- Di produksi aplikasi memanggil API lewat proxy same-origin `/delcom-api/...`. Di Vercel proxy ini diatur
+  `vercel.json`; di Netlify diatur `public/_redirects` (ikut ter-copy ke `dist/`). Tanpa file ini,
+  login/daftar gagal dengan 404 dan pesan "Gagal terhubung ke server".
+- `public/_headers` memberi cache satu tahun untuk aset build yang ber-hash dan meminta browser
+  memvalidasi ulang dokumen `index.html`, sehingga deployment baru tidak tertahan cache lama.
+- Saat build produksi, CSS aplikasi disisipkan langsung ke HTML agar tidak memerlukan permintaan
+  stylesheet render-blocking yang terpisah.
+- Build command: `bun run build` (atau `npm run build`), publish directory: `dist`.
+- Variabel `VITE_DELCOM_BASEURL` hanya dipakai untuk URL gambar (aset) dan saat `bun run dev`.
